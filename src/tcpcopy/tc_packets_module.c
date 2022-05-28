@@ -19,7 +19,12 @@ static uint64_t timeval_diff(struct timeval *, struct timeval *);
 static  pcap_t  *pcap_map[MAX_FD_NUM];
 static int proc_pcap_pack(tc_event_t *);
 #else
+#if (TC_FROM_LINK_LAYER)
+static int
+tc_process_raw_socket_packet(tc_event_t *);
+#else
 static int proc_raw_pack(tc_event_t *);
+#endif
 #endif
 static int dispose_packet(unsigned char *, int, int *);
 
@@ -134,12 +139,23 @@ tc_packets_init(tc_event_loop_t *event_loop)
 
 #else
     /* init the raw socket to recv packets */
-    if ((fd = tc_raw_socket_in_init(COPY_FROM_IP_LAYER)) == TC_INVALID_SOCK) {
+#if (TC_FROM_LINK_LAYER)
+    if ((fd = tc_raw_socket_in_init(COPY_FROM_LINK_LAYER)) 
+            == TC_INVALID_SOCK) 
+#else
+    if ((fd = tc_raw_socket_in_init(COPY_FROM_IP_LAYER)) 
+            == TC_INVALID_SOCK) 
+#endif
+    {
         return TC_ERR;
     }
     tc_socket_set_nonblocking(fd);
 
+#if (TC_FROM_LINK_LAYER)
+    ev = tc_event_create(event_loop->pool, fd, tc_process_raw_socket_packet, NULL);
+#else
     ev = tc_event_create(event_loop->pool, fd, proc_raw_pack, NULL);
+#endif
     if (ev == NULL) {
         return TC_ERR;
     }
@@ -212,8 +228,44 @@ proc_pcap_pack(tc_event_t *rev)
 
 #else
 
-static unsigned char pack_buffer1[IP_RCV_BUF_SIZE];
+#if (TC_FROM_LINK_LAYER)
+static int
+tc_process_raw_socket_packet(tc_event_t *rev)
+{
+    int  recv_len;
+    unsigned char frame[ETHERNET_HDR_LEN + IP_RCV_BUF_SIZE];
+    unsigned char   *packet;
 
+    for ( ;; ) {
+
+        recv_len = recvfrom(rev->fd, frame, 
+                sizeof(frame), 0, NULL, NULL);
+
+        if (recv_len == -1) {
+            if (errno == EAGAIN) {
+                return TC_OK;
+            }
+
+            tc_log_info(LOG_ERR, errno, "recvfrom");
+            return TC_ERR;
+        }
+
+        if (recv_len == 0) {
+            tc_log_info(LOG_ERR, 0, "recv len is 0");
+            return TC_ERR;
+        }
+
+        packet = frame + ETHERNET_HDR_LEN;
+
+        if (dispose_packet(packet, recv_len, NULL) == TC_ERR) {
+            return TC_ERR;
+        }
+    }
+
+    return TC_OK;
+}
+#else
+static unsigned char pack_buffer1[IP_RCV_BUF_SIZE];
 static int 
 proc_raw_pack(tc_event_t *rev)
 {
@@ -247,6 +299,7 @@ proc_raw_pack(tc_event_t *rev)
 
     return TC_OK;
 }
+#endif
 #endif
 
 
@@ -350,6 +403,15 @@ replicate_packs(tc_iph_t *ip, tc_tcph_t *tcp, int replica_num)
 
 static unsigned char pack_buffer2[IP_RCV_BUF_SIZE];
 
+/*
+void analyseIP(tc_iph_t *ip)
+{
+    unsigned char* p = (unsigned char*)&ip->saddr;
+    printf("Source IP\t: %u.%u.%u.%u\n",p[0],p[1],p[2],p[3]);
+    p = (unsigned char*)&ip->daddr;
+    printf("Destination IP\t: %u.%u.%u.%u\n",p[0],p[1],p[2],p[3]);
+
+}*/
 static int
 dispose_packet(unsigned char *packet, int ip_rcv_len, int *p_valid_flag)
 {
@@ -368,6 +430,7 @@ dispose_packet(unsigned char *packet, int ip_rcv_len, int *p_valid_flag)
     }
 
     ip   = (tc_iph_t *) packet;
+
     if (tc_check_ingress_pack_needed(ip)) {
 
         replica_num = clt_settings.replica_num;

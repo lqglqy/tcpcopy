@@ -75,6 +75,7 @@ do
         --dnat)                          TC_DNAT=YES               ;;
         --disable-combined)              TC_COMBINED=NO            ;;
         --udp)                           TC_UDP=YES                ;;
+        --from-link-layer)               TC_FROM_LINK_LAYER=YES    ;;
 
         --with-debug)                    TC_DEBUG=YES              ;;
         --with-tcmalloc)                 TC_TCMALLOC=YES           ;;
@@ -124,6 +125,7 @@ cat << END
   --dnat                             support dnat
   --disable-combined                 disable combined response mode        
   --udp                              udpcopy
+  --from-link-layer                  recvice packets from the data link
 
 END
 

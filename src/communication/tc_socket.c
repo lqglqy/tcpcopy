@@ -137,7 +137,7 @@ tc_raw_socket_in_init(int type)
 
     if (type == COPY_FROM_LINK_LAYER) {
         /* copy ip datagram from Link layer */
-        fd = socket(AF_PACKET, SOCK_DGRAM, htons(ETH_P_IP));
+        fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     } else {
         /* copy ip datagram from IP layer */
 #if (TC_UDP)

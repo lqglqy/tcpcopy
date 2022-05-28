@@ -2134,6 +2134,15 @@ tc_check_ingress_pack_needed(tc_iph_t *ip)
     if (TC_CLT == check_pack_src(&(clt_settings.transfer), ip->daddr, 
                 tcp->dest, CHECK_DEST)) 
     {
+
+/*
+    unsigned char* p = (unsigned char*)&ip->saddr;
+    printf("Source IP\t: %u.%u.%u.%u\n",p[0],p[1],p[2],p[3]);
+    printf("Source PORT\t: %u\n", ntohs(tcp->source));
+    p = (unsigned char*)&ip->daddr;
+    printf("Destination IP\t: %u.%u.%u.%u\n",p[0],p[1],p[2],p[3]);
+    printf("Destination PORT\t: %u\n", ntohs(tcp->dest));
+*/
         if (!clt_settings.target_localhost) {
             if (ip->saddr == LOCALHOST) {
                 if (clt_settings.localhost_tf_ip != 0) {

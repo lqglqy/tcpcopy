@@ -102,6 +102,10 @@ if [ $TC_UDP = YES ]; then
     have=TC_UDP . auto/have
 fi
 
+if [ $TC_FROM_LINK_LAYER = YES ]; then
+    have=TC_FROM_LINK_LAYER . auto/have
+fi
+
 if [ $TC_DNAT = YES ]; then
     have=TC_DNAT . auto/have
 fi

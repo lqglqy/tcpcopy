@@ -77,7 +77,7 @@ Two quick start options are available for *tcpcopy*:
                                 and better performance is achieved.
     --with-tcmalloc             use tcmalloc instead of malloc
     --with-debug                compile tcpcopy with debug support (saved in a log file)
-
+    --from-link-layer           Receive all types of IP ARP RARP data frames sent to the local Mac and all types of data frames sent from the local Mac (when the hybrid mode is turned on, data frames not sent to the local Mac will be received.)
 
    
 ## Running TCPCopy

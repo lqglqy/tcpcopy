@@ -54,10 +54,12 @@ check_pack_src(transfer_maps_t *tf, uint32_t ip, uint16_t port, int src_flag)
     ret = TC_UNKNOWN;
     map = tf->map;
 
+//printf("check pack src tf num %d\n", tf->num);
     for (i = 0; i < tf->num; i++) {
 
         pair = map[i];
         if (src_flag == CHECK_DEST) {
+           //printf("online port: %u port %u onlineip %u ip %u\n", pair->online_port, port, pair->online_ip, ip); 
             if (ip == pair->online_ip && port == pair->online_port) {
                 ret = TC_CLT;
                 break;
