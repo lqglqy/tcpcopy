@@ -239,7 +239,7 @@ tc_process_raw_socket_packet(tc_event_t *rev)
     for ( ;; ) {
 
         recv_len = recvfrom(rev->fd, frame, 
-                sizeof(frame), 0, NULL, NULL);
+                sizeof(frame)-1, 0, NULL, NULL);
 
         if (recv_len == -1) {
             if (errno == EAGAIN) {
@@ -256,6 +256,7 @@ tc_process_raw_socket_packet(tc_event_t *rev)
         }
 
         packet = frame + ETHERNET_HDR_LEN;
+        recv_len -= ETHERNET_HDR_LEN;
 
         if (dispose_packet(packet, recv_len, NULL) == TC_ERR) {
             return TC_ERR;
